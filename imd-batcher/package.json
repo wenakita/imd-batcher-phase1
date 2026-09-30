@@ -1,0 +1,14 @@
+{
+  "name": "imd-batcher-finalize",
+  "private": true,
+  "description": "Import-closed Phase 1 finalize snapshot for an IMD review. Not a production package.",
+  "dependencies": {
+    "@layerzerolabs/lz-evm-messagelib-v2": "3.0.159",
+    "@layerzerolabs/lz-evm-protocol-v2": "3.0.159",
+    "@layerzerolabs/oapp-evm": "0.4.1",
+    "@layerzerolabs/oft-evm": "4.0.1",
+    "@openzeppelin/contracts": "5.4.0",
+    "@uniswap/v4-core": "1.0.2",
+    "solidity-bytes-utils": "0.8.4"
+  }
+}

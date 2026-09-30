@@ -1,0 +1,22 @@
+[profile.default]
+src = "imd-batcher/contracts"
+out = "out"
+libs = ["imd-batcher/node_modules", "imd-batcher/lib"]
+test = "imd-batcher/test"
+auto_detect_solc = true
+evm_version = "cancun"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
+bytecode_hash = "none"
+solc_version = "0.8.30"
+remappings = [
+    "test/=imd-batcher/test/",
+    "@4626/=imd-batcher/contracts/",
+    "@openzeppelin/=imd-batcher/node_modules/@openzeppelin/",
+    "@layerzerolabs/=imd-batcher/node_modules/@layerzerolabs/",
+    "@uniswap/v4-core/=imd-batcher/node_modules/@uniswap/v4-core/",
+    "solidity-bytes-utils/=imd-batcher/node_modules/solidity-bytes-utils/",
+    "permit2/=imd-batcher/permit2/",
+    "forge-std/=imd-batcher/lib/forge-std/src/",
+]
