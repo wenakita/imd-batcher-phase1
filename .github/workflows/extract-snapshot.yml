@@ -34,20 +34,22 @@ jobs:
           FORGE_STD_PIN=7117c90c8cf6c68e5acce4f09a6b24715cea4de6
           if [ -f imd-batcher/lib/forge-std/src/Test.sol ] && [ "$(cat imd-batcher/lib/forge-std/PIN 2>/dev/null || true)" = "$FORGE_STD_PIN" ]; then
             echo "forge-std already pinned"
+          else
+            rm -rf imd-batcher/lib/forge-std
+            git clone https://github.com/foundry-rs/forge-std.git imd-batcher/lib/forge-std
+            git -C imd-batcher/lib/forge-std checkout "$FORGE_STD_PIN"
+            rm -rf imd-batcher/lib/forge-std/.git
+            printf '%s\n' "$FORGE_STD_PIN" > imd-batcher/lib/forge-std/PIN
+          fi
+      - name: vendor npm packages
+        run: |
+          set -euo pipefail
+          if [ -f imd-batcher/node_modules/@openzeppelin/contracts/package.json ]; then
+            echo "npm packages already vendored"
             exit 0
           fi
-          rm -rf imd-batcher/lib/forge-std
-          git clone https://github.com/foundry-rs/forge-std.git imd-batcher/lib/forge-std
-          git -C imd-batcher/lib/forge-std checkout "$FORGE_STD_PIN"
-          rm -rf imd-batcher/lib/forge-std/.git
-          printf '%s\n' "$FORGE_STD_PIN" > imd-batcher/lib/forge-std/PIN
-          cat > .gitignore << 'EOF'
-          imd-batcher/node_modules/
-          out/
-          cache/
-          EOF
-          # the heredoc above is indented; rewrite it without leading spaces
-          printf '%s\n' 'imd-batcher/node_modules/' 'out/' 'cache/' > .gitignore
+          (cd imd-batcher && npm ci --ignore-scripts)
+          printf '%s\n' 'out/' 'cache/' > .gitignore
           git add -A
           if git diff --cached --quiet; then
             echo "nothing to commit"
@@ -55,5 +57,5 @@ jobs:
           fi
           git config user.email "84614986+wenakita@users.noreply.github.com"
           git config user.name "Akita V2"
-          git commit -m "Vendor pinned forge-std so Foundry can compile."
+          git commit -m "Vendor npm packages so Foundry can compile without writing node_modules."
           git push
