@@ -1,0 +1,34 @@
+name: extract-snapshot
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/extract-snapshot.yml
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: extract pinned snapshot
+        run: |
+          set -euo pipefail
+          if [ -f imd-batcher/contracts/shared/deploy/batchers/DeploymentBatcher.sol ]; then
+            exit 0
+          fi
+          PIN=78865205fd384d121276712191e095da133198e1
+          BASE="https://raw.githubusercontent.com/4626fun/4626/${PIN}"
+          curl -fsSL -o IMD_BATCHER_ARCHIVE.b64 "${BASE}/IMD_BATCHER_ARCHIVE.b64"
+          echo "4d2199f77975e66c6c92e4886743cc6a40e8e7ce3a80efe638a67bbb205f6b74  IMD_BATCHER_ARCHIVE.b64" | sha256sum -c -
+          base64 -d IMD_BATCHER_ARCHIVE.b64 > snap.zip
+          echo "e4c8a01de9717bed7f19ee2239a6868d4122e21455b9dd865ea2aae845032947  snap.zip" | sha256sum -c -
+          unzip -q snap.zip
+          curl -fsSL -o foundry.toml "${BASE}/foundry.toml"
+          curl -fsSL -o IMD_BATCHER_REVIEW.md "${BASE}/IMD_BATCHER_REVIEW.md"
+          rm -f IMD_BATCHER_ARCHIVE.b64 snap.zip
+          git add -A
+          git config user.email "84614986+wenakita@users.noreply.github.com"
+          git config user.name "Akita V2"
+          git commit -m "Add Phase 1 batcher snapshot"
+          git push
