@@ -15,20 +15,45 @@ jobs:
         run: |
           set -euo pipefail
           if [ -f imd-batcher/contracts/shared/deploy/batchers/DeploymentBatcher.sol ]; then
+            echo "snapshot already present"
+          else
+            PIN=78865205fd384d121276712191e095da133198e1
+            BASE="https://raw.githubusercontent.com/4626fun/4626/${PIN}"
+            curl -fsSL -o IMD_BATCHER_ARCHIVE.b64 "${BASE}/IMD_BATCHER_ARCHIVE.b64"
+            echo "4d2199f77975e66c6c92e4886743cc6a40e8e7ce3a80efe638a67bbb205f6b74  IMD_BATCHER_ARCHIVE.b64" | sha256sum -c -
+            base64 -d IMD_BATCHER_ARCHIVE.b64 > snap.zip
+            echo "e4c8a01de9717bed7f19ee2239a6868d4122e21455b9dd865ea2aae845032947  snap.zip" | sha256sum -c -
+            unzip -q snap.zip
+            curl -fsSL -o foundry.toml "${BASE}/foundry.toml"
+            curl -fsSL -o IMD_BATCHER_REVIEW.md "${BASE}/IMD_BATCHER_REVIEW.md"
+            rm -f IMD_BATCHER_ARCHIVE.b64 snap.zip
+          fi
+      - name: vendor pinned forge-std
+        run: |
+          set -euo pipefail
+          FORGE_STD_PIN=7117c90c8cf6c68e5acce4f09a6b24715cea4de6
+          if [ -f imd-batcher/lib/forge-std/src/Test.sol ] && [ "$(cat imd-batcher/lib/forge-std/PIN 2>/dev/null || true)" = "$FORGE_STD_PIN" ]; then
+            echo "forge-std already pinned"
             exit 0
           fi
-          PIN=78865205fd384d121276712191e095da133198e1
-          BASE="https://raw.githubusercontent.com/4626fun/4626/${PIN}"
-          curl -fsSL -o IMD_BATCHER_ARCHIVE.b64 "${BASE}/IMD_BATCHER_ARCHIVE.b64"
-          echo "4d2199f77975e66c6c92e4886743cc6a40e8e7ce3a80efe638a67bbb205f6b74  IMD_BATCHER_ARCHIVE.b64" | sha256sum -c -
-          base64 -d IMD_BATCHER_ARCHIVE.b64 > snap.zip
-          echo "e4c8a01de9717bed7f19ee2239a6868d4122e21455b9dd865ea2aae845032947  snap.zip" | sha256sum -c -
-          unzip -q snap.zip
-          curl -fsSL -o foundry.toml "${BASE}/foundry.toml"
-          curl -fsSL -o IMD_BATCHER_REVIEW.md "${BASE}/IMD_BATCHER_REVIEW.md"
-          rm -f IMD_BATCHER_ARCHIVE.b64 snap.zip
+          rm -rf imd-batcher/lib/forge-std
+          git clone https://github.com/foundry-rs/forge-std.git imd-batcher/lib/forge-std
+          git -C imd-batcher/lib/forge-std checkout "$FORGE_STD_PIN"
+          rm -rf imd-batcher/lib/forge-std/.git
+          printf '%s\n' "$FORGE_STD_PIN" > imd-batcher/lib/forge-std/PIN
+          cat > .gitignore << 'EOF'
+          imd-batcher/node_modules/
+          out/
+          cache/
+          EOF
+          # the heredoc above is indented; rewrite it without leading spaces
+          printf '%s\n' 'imd-batcher/node_modules/' 'out/' 'cache/' > .gitignore
           git add -A
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
           git config user.email "84614986+wenakita@users.noreply.github.com"
           git config user.name "Akita V2"
-          git commit -m "Add Phase 1 batcher snapshot"
+          git commit -m "Vendor pinned forge-std so Foundry can compile."
           git push
